@@ -1,0 +1,47 @@
+<%
+rerun = File.file?('rerun.txt') ? IO.read('rerun.txt') : ""
+rerun_opts = rerun.to_s.strip.empty? ? "--format #{ENV['CUCUMBER_FORMAT'] || 'pretty'} features" : "--format #{ENV['CUCUMBER_FORMAT'] || 'pretty'} #{rerun}"
+std_opts = "--format #{ENV['CUCUMBER_FORMAT'] || 'pretty'} --strict --tags ~@wip"
+%>
+# Setup the reports folders and prefix filename with date-timestamp
+<%
+unless Dir.exist?("reports")
+	Dir.mkdir('reports')
+end
+
+Dir.chdir("reports")
+
+puts "\n>>> TEST REPORT will be filed in the following path:\n" + Dir.pwd + "\/\n\n"
+
+reportfile = "reports\/test-report.html"
+
+Dir.chdir("..")
+%>
+
+<% common = "--tags ~@wip --tags ~@ignore --strict" %>
+
+# DEFAULT PROFILE: executed through command without explicit profile switch 'bundle exec cucumber'
+default: --profile dev
+
+# ENVIRONMENT PROFILES: At the moment running with no profile (default) is the same as appending "-p staging"
+transfer-desk-staging-headless: TARGET=transfer-desk-staging --profile html_report PAUSE=1 <%= common%> features
+transfer-desk-live: TARGET=transfer-desk-live --profile html_report IN_BROWSER_CHROME=true PAUSE=1 <%= common%> features
+transfer-desk-staging: TARGET=transfer-desk-staging --profile html_report IN_BROWSER_CHROME=true PAUSE=1 <%= common%> features
+
+# COMMON RUNTIME PROFILES: these profiles are part of other profiles, cannot be run on their own.
+
+html_report: --format pretty --format html --out <%= reportfile%> --format junit --out reports
+
+# WORK IN PROGRESS TAG PROFILE
+wip: TARGET=transfer-desk-staging --profile html_report IN_BROWSER_CHROME=true PAUSE=1 <%= common%> features --tags @wip:3 --wip features
+smoke: TARGET=transfer-desk-staging --profile html_report IN_BROWSER_CHROME=true PAUSE=1 <%= common%> features --tags @smoke
+search: TARGET=transfer-desk-staging --profile html_report IN_BROWSER_CHROME=true PAUSE=1 <%= common%> features --tags @search
+copy: TARGET=transfer-desk-staging --profile html_report IN_BROWSER_CHROME=true PAUSE=1 <%= common%> features --tags @copy
+impact_factor: TARGET=transfer-desk-staging --profile html_report IN_BROWSER_CHROME=true PAUSE=1 <%= common%> features --tags @impact_factor
+
+
+# DEBUG PROFILES: Must be run in conjuction with an environment profile above
+chrome-live: TARGET=transfer-desk-live --profile html_report IN_BROWSER_CHROME=true PAUSE=1 <%= common%> features
+chrome-staging: TARGET=transfer-desk-staging --profile html_report IN_BROWSER_CHROME=true PAUSE=1 <%= common%> features
+browser-staging: TARGET=transfer-desk-staging --profile html_report IN_BROWSER=true PAUSE=1 <%= common%> features
+debug-staging: TARGET=transfer-desk-staging --profile html_report DEBUG=true <%= common%> features

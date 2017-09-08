@@ -1,0 +1,9 @@
+# This Docker Compose configuration file is meant to be used with fig-env. See
+# https://bitbucket.org/springersbm/fig-env.
+
+code:
+  image: te-docker.docker-registry.tools.springer-sbm.com/fig-env-siteprism
+  dns: *DNS
+  volumes:
+    - ..:/home/dev/code
+  shm_size: 256M

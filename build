@@ -1,0 +1,31 @@
+#!/bin/bash
+
+#Examples
+# ./build transfer-desk-live
+# ./build transfer-desk-staging
+# ./build browser
+# ./build chrome
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+COMMON_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/common/" && pwd )"
+
+pushd "$DIR" >/dev/null 2>&1
+
+# "$COMMON_DIR/ruby.sh" 2.2.3 2.2.3 >/dev/null
+
+bundle install --path vendor/bundle
+
+# Required for ChromeDriver in acceptance tests
+export DISPLAY=:99
+sudo /etc/init.d/xvfb start >/dev/null 2>&1 || true
+
+if [ "$#" -gt 0 ]; then
+	echo "Running on environment $1"
+	bundle exec cucumber -p "$1"
+else
+	bundle exec cucumber -p chrome-staging
+fi
